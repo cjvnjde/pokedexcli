@@ -43,6 +43,7 @@ func catchCommand(c *config, name string) error {
 
 	if isCought(data.BaseExperience) {
 		fmt.Printf("%s was caught!\n", data.Name)
+		c.pokemons[data.Name] = data
 	} else {
 		fmt.Printf("%s escaped!\n", data.Name)
 	}
