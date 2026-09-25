@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 )
 
@@ -23,6 +26,16 @@ func getCommands() map[string]cliCommand {
 			description: "Displays a help message",
 			callback:    helpCommand,
 		},
+		"map": {
+			name:        "map",
+			description: "Displays the name of next 20 location areas",
+			callback:    mapCommand,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the name of prevous 20 location areas",
+			callback:    mapBCommand,
+		},
 	}
 }
 
@@ -43,4 +56,65 @@ func helpCommand(c *config) error {
 	}
 
 	return nil
+}
+
+type apiResp[T any] struct {
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous string `json:"previous"`
+	Results  []T
+}
+
+type area struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+func mapDirectional(c *config, isForward bool) error {
+	currentURL := "https://pokeapi.co/api/v2/location-area/"
+
+	if isForward {
+		if c.Next != "" {
+			currentURL = c.Next
+		}
+	} else {
+		if c.Previous != "" {
+			currentURL = c.Previous
+		}
+	}
+
+	res, err := http.Get(currentURL)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return err
+	}
+
+	var data apiResp[area]
+
+	if err = json.Unmarshal(body, &data); err != nil {
+		return err
+	}
+
+	for _, v := range data.Results {
+		fmt.Println(v.Name)
+	}
+
+	c.Next = data.Next
+	c.Previous = data.Previous
+
+	return nil
+}
+
+func mapCommand(c *config) error {
+	return mapDirectional(c, true)
+}
+
+func mapBCommand(c *config) error {
+	return mapDirectional(c, false)
 }
