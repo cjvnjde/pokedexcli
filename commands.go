@@ -49,7 +49,7 @@ func commandExit(c *config) error {
 func helpCommand(c *config) error {
 	commands := getCommands()
 	fmt.Println("Welcome to the Pokedex!")
-	fmt.Println("Usage:\n")
+	fmt.Print("Usage:\n\n")
 
 	for code, command := range commands {
 		fmt.Printf("%s: %s\n", code, command.description)
@@ -72,6 +72,7 @@ type area struct {
 
 func mapDirectional(c *config, isForward bool) error {
 	currentURL := "https://pokeapi.co/api/v2/location-area/"
+	var body []byte
 
 	if isForward {
 		if c.Next != "" {
@@ -83,21 +84,31 @@ func mapDirectional(c *config, isForward bool) error {
 		}
 	}
 
-	res, err := http.Get(currentURL)
-	if err != nil {
-		return err
-	}
+	cachedData, ok := c.cache.Get(currentURL)
 
-	defer res.Body.Close()
+	if ok {
+		body = cachedData
+	} else {
+		res, err := http.Get(currentURL)
+		if err != nil {
+			return err
+		}
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return err
+		defer res.Body.Close()
+
+		body2, err := io.ReadAll(res.Body)
+
+		body = body2
+		if err != nil {
+			return err
+		}
+
+		c.cache.Add(currentURL, body)
 	}
 
 	var data apiResp[area]
 
-	if err = json.Unmarshal(body, &data); err != nil {
+	if err := json.Unmarshal(body, &data); err != nil {
 		return err
 	}
 

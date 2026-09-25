@@ -4,6 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
+
+	"github.com/cjvnjde/pokedexcli/internal"
 )
 
 func main() {
@@ -12,6 +15,7 @@ func main() {
 
 	c := &config{
 		commands: getCommands(),
+		cache:    internal.NewCache(5 * time.Second),
 	}
 
 	for {
