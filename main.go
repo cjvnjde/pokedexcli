@@ -25,15 +25,27 @@ func main() {
 		if ok {
 			input := scanner.Text()
 			data := cleanInput(input)
+			var command, param string
 
 			if len(data) > 0 {
-				command := data[0]
+				command = data[0]
+			}
+			if len(data) > 1 {
+				param = data[1]
+			}
 
-				if cm, ok := commands[command]; ok {
-					cm.callback(c)
+			if cm, ok := commands[command]; ok {
+				if param != "" {
+					if error := cm.callback(c, param); error != nil {
+						fmt.Println(error)
+					}
 				} else {
-					fmt.Println("Unknown command")
+					if error := cm.callback(c, ""); error != nil {
+						fmt.Println(error)
+					}
 				}
+			} else {
+				fmt.Println("Unknown command")
 			}
 		}
 	}

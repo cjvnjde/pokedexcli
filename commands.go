@@ -1,17 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*config) error
+	callback    func(*config, string) error
 }
 
 func getCommands() map[string]cliCommand {
@@ -36,17 +33,22 @@ func getCommands() map[string]cliCommand {
 			description: "Displays the name of prevous 20 location areas",
 			callback:    mapBCommand,
 		},
+		"explore": {
+			name:        "explore",
+			description: "Displays pokemons in the location",
+			callback:    exploreCommand,
+		},
 	}
 }
 
-func commandExit(c *config) error {
+func commandExit(c *config, param string) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 
 	return nil
 }
 
-func helpCommand(c *config) error {
+func helpCommand(c *config, param string) error {
 	commands := getCommands()
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Print("Usage:\n\n")
@@ -56,76 +58,4 @@ func helpCommand(c *config) error {
 	}
 
 	return nil
-}
-
-type apiResp[T any] struct {
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
-	Results  []T
-}
-
-type area struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}
-
-func mapDirectional(c *config, isForward bool) error {
-	currentURL := "https://pokeapi.co/api/v2/location-area/"
-	var body []byte
-
-	if isForward {
-		if c.Next != "" {
-			currentURL = c.Next
-		}
-	} else {
-		if c.Previous != "" {
-			currentURL = c.Previous
-		}
-	}
-
-	cachedData, ok := c.cache.Get(currentURL)
-
-	if ok {
-		body = cachedData
-	} else {
-		res, err := http.Get(currentURL)
-		if err != nil {
-			return err
-		}
-
-		defer res.Body.Close()
-
-		body2, err := io.ReadAll(res.Body)
-
-		body = body2
-		if err != nil {
-			return err
-		}
-
-		c.cache.Add(currentURL, body)
-	}
-
-	var data apiResp[area]
-
-	if err := json.Unmarshal(body, &data); err != nil {
-		return err
-	}
-
-	for _, v := range data.Results {
-		fmt.Println(v.Name)
-	}
-
-	c.Next = data.Next
-	c.Previous = data.Previous
-
-	return nil
-}
-
-func mapCommand(c *config) error {
-	return mapDirectional(c, true)
-}
-
-func mapBCommand(c *config) error {
-	return mapDirectional(c, false)
 }
