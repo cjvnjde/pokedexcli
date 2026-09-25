@@ -16,6 +16,7 @@ func main() {
 	c := &config{
 		commands: getCommands(),
 		cache:    internal.NewCache(5 * time.Second),
+		pokemons: map[string]Pokemon{},
 	}
 
 	for {

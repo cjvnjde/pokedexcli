@@ -7,4 +7,5 @@ type config struct {
 	Next     string
 	Previous string
 	cache    *internal.Cache
+	pokemons map[string]Pokemon
 }
