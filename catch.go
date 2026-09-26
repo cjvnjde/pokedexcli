@@ -41,7 +41,7 @@ func catchCommand(c *config, name string) error {
 		return err
 	}
 
-	if isCought(data.BaseExperience) {
+	if isCaught(data.BaseExperience) {
 		fmt.Printf("%s was caught!\n", data.Name)
 		c.pokemons[data.Name] = data
 	} else {
@@ -51,8 +51,8 @@ func catchCommand(c *config, name string) error {
 	return nil
 }
 
-func isCought(experience int) bool {
-	chance := rand.Intn(100)
+func isCaught(experience int) bool {
+	chance := rand.Intn(100) / 100.0
 
-	return experience < chance
+	return (100.0 / (100.0 + float64(experience))) > float64(chance)
 }

@@ -22,6 +22,11 @@ func main() {
 	for {
 		fmt.Print("Pokedex > ")
 		ok := scanner.Scan()
+		err := scanner.Err()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
 		if ok {
 			input := scanner.Text()
@@ -48,6 +53,8 @@ func main() {
 			} else {
 				fmt.Println("Unknown command")
 			}
+		} else {
+			os.Exit(0)
 		}
 	}
 }
