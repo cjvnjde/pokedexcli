@@ -52,7 +52,5 @@ func catchCommand(c *config, name string) error {
 }
 
 func isCaught(experience int) bool {
-	chance := rand.Intn(100) / 100.0
-
-	return (100.0 / (100.0 + float64(experience))) > float64(chance)
+	return (100.0 / (100.0 + float64(experience))) > rand.Float64()
 }
